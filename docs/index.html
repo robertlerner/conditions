@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather Conditions Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -166,19 +167,29 @@
       const labels = data.map(d => `${d.date} ${d.hour}:00`);
       const temperatures = data.map(d => d.temperature);
 
+      // Color code each point based on temperature
+      // < -10: really good (dark green)
+      // -10 to 0: good (light green)
+      // 0 to 5: bad (orange)
+      // > 5: really bad (red)
+      const pointColors = temperatures.map(temp => {
+        if (temp < -10) return '#1B5E20'; // dark green
+        if (temp < 0) return '#4CAF50';   // light green
+        if (temp < 5) return '#FF9800';   // orange
+        return '#D32F2F';                 // red
+      });
+
       new Chart(canvas, {
-        type: 'line',
+        type: 'scatter',
         data: {
           labels: labels,
           datasets: [{
             label: 'Temperature (°C)',
-            data: temperatures,
-            borderColor: '#2196F3',
-            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-            pointRadius: 1,
-            pointHoverRadius: 5
+            data: temperatures.map((temp, i) => ({ x: i, y: temp })),
+            backgroundColor: pointColors,
+            borderColor: pointColors,
+            pointRadius: 4,
+            pointHoverRadius: 6
           }]
         },
         options: {
@@ -191,10 +202,56 @@
             tooltip: {
               callbacks: {
                 title: function(context) {
-                  return context[0].label;
+                  return labels[context[0].parsed.x];
                 },
                 label: function(context) {
-                  return `${context.parsed.y.toFixed(1)}°C`;
+                  const temp = context.parsed.y.toFixed(1);
+                  let status = '';
+                  if (context.parsed.y < -10) status = ' (Really Good!)';
+                  else if (context.parsed.y < 0) status = ' (Good)';
+                  else if (context.parsed.y < 5) status = ' (Bad)';
+                  else status = ' (Really Bad!)';
+                  return `${temp}°C${status}`;
+                }
+              }
+            },
+            annotation: {
+              annotations: {
+                reallyGoodZone: {
+                  type: 'box',
+                  yMin: -40,
+                  yMax: -10,
+                  backgroundColor: 'rgba(27, 94, 32, 0.1)',
+                  borderWidth: 0
+                },
+                goodZone: {
+                  type: 'box',
+                  yMin: -10,
+                  yMax: 0,
+                  backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                  borderWidth: 0
+                },
+                badZone: {
+                  type: 'box',
+                  yMin: 0,
+                  yMax: 5,
+                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                  borderWidth: 0
+                },
+                reallyBadZone: {
+                  type: 'box',
+                  yMin: 5,
+                  yMax: 40,
+                  backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                  borderWidth: 0
+                },
+                zeroLine: {
+                  type: 'line',
+                  yMin: 0,
+                  yMax: 0,
+                  borderColor: '#666',
+                  borderWidth: 2,
+                  borderDash: [5, 5]
                 }
               }
             }
@@ -202,7 +259,17 @@
           scales: {
             x: {
               display: true,
+              type: 'linear',
               ticks: {
+                callback: function(value) {
+                  if (value >= 0 && value < labels.length) {
+                    const label = labels[Math.floor(value)];
+                    if (label) {
+                      return label.split(' ')[0]; // Show date only
+                    }
+                  }
+                  return '';
+                },
                 maxTicksLimit: 10,
                 autoSkip: true
               }
