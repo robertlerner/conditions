@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Conditions Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+    .loading {
+      text-align: center;
+      padding: 50px;
+      font-size: 18px;
+      color: #666;
+    }
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+    }
+    .chart-wrapper {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .chart-wrapper h2 {
+      margin-bottom: 15px;
+      color: #444;
+      font-size: 18px;
+    }
+    .chart-wrapper canvas {
+      max-height: 300px;
+    }
+    .error {
+      color: #d32f2f;
+      padding: 20px;
+      background: #ffebee;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Conditions Dashboard</h1>
+  <div id="loading" class="loading">Loading data...</div>
+  <div id="error" class="error" style="display:none;"></div>
+  <div id="charts" class="charts-container"></div>
+
+  <script>
+    // REPLACE THIS WITH YOUR GOOGLE SHEET ID
+    const SHEET_ID = '1wPqlgJc83YASKPFbduuAnIooPvPXBMiVUhn4jSPDXxY';
+    const SHEET_NAME = 'Sheet1';
+    const DAYS_TO_SHOW = 60; // Last 60 days
+
+    async function loadData() {
+      try {
+        // Use CSV export format - more reliable for public sheets
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const csvText = await response.text();
+        return parseCSV(csvText);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        throw error;
+      }
+    }
+
+    function parseCSV(csv) {
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
+        if (values.length === headers.length) {
+          data.push({
+            date: values[0],
+            hour: values[1],
+            location: values[2],
+            temperature: parseFloat(values[3])
+          });
+        }
+      }
+
+      return data;
+    }
+
+    function filterRecentData(data, days) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+      return data.filter(row => row.date >= cutoffStr);
+    }
+
+    function groupByLocation(data) {
+      const groups = {};
+
+      data.forEach(row => {
+        if (!groups[row.location]) {
+          groups[row.location] = [];
+        }
+        groups[row.location].push(row);
+      });
+
+      // Sort each location's data by date and hour
+      Object.keys(groups).forEach(location => {
+        groups[location].sort((a, b) => {
+          const dateCompare = a.date.localeCompare(b.date);
+          return dateCompare !== 0 ? dateCompare : a.hour.localeCompare(b.hour);
+        });
+      });
+
+      return groups;
+    }
+
+    function createChart(location, data) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'chart-wrapper';
+
+      const title = document.createElement('h2');
+      title.textContent = location;
+      wrapper.appendChild(title);
+
+      const canvas = document.createElement('canvas');
+      wrapper.appendChild(canvas);
+
+      const labels = data.map(d => `${d.date} ${d.hour}:00`);
+      const temperatures = data.map(d => d.temperature);
+
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Temperature (°C)',
+            data: temperatures,
+            borderColor: '#2196F3',
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            borderWidth: 2,
+            tension: 0.1,
+            pointRadius: 1,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  return context[0].label;
+                },
+                label: function(context) {
+                  return `${context.parsed.y.toFixed(1)}°C`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              ticks: {
+                maxTicksLimit: 10,
+                autoSkip: true
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Temperature (°C)'
+              }
+            }
+          }
+        }
+      });
+
+      return wrapper;
+    }
+
+    async function init() {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const chartsContainer = document.getElementById('charts');
+
+      try {
+        loading.style.display = 'block';
+        error.style.display = 'none';
+
+        const data = await loadData();
+        const recentData = filterRecentData(data, DAYS_TO_SHOW);
+        const locationGroups = groupByLocation(recentData);
+
+        loading.style.display = 'none';
+
+        if (Object.keys(locationGroups).length === 0) {
+          error.textContent = 'No data found. Make sure your sheet is publicly accessible.';
+          error.style.display = 'block';
+          return;
+        }
+
+        // Sort locations alphabetically
+        const locations = Object.keys(locationGroups).sort();
+
+        locations.forEach(location => {
+          const chart = createChart(location, locationGroups[location]);
+          chartsContainer.appendChild(chart);
+        });
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = `Error loading data: ${err.message}. Make sure your Google Sheet is shared publicly and the SHEET_ID is correct.`;
+        error.style.display = 'block';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

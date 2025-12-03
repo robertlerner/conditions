@@ -74,16 +74,19 @@ Once set up, the GitHub Action will run automatically 4 times per day. You can a
 
 ## Data Format
 
-The sheet uses a columnar format:
+The sheet uses a long format with one row per location per reading:
 - **Date**: YYYY-MM-DD format
 - **Hour**: HH format (00-23 UTC)
-- **Location columns**: Each location from config gets its own column with temperature in Celsius
+- **Location**: Location name
+- **Temperature**: Temperature in Celsius
 
 Example:
 ```
-Date       | Hour | Oslo, Norway | New York, USA
-2025-12-03 | 00   | 5.2         | 12.3
-2025-12-03 | 06   | 4.8         | 11.9
+Date       | Hour | Location     | Temperature
+2025-12-03 | 00   | Töftfossen  | 5.2
+2025-12-03 | 00   | Vinstra     | 4.8
+2025-12-03 | 06   | Töftfossen  | 5.0
+2025-12-03 | 06   | Vinstra     | 4.5
 ```
 
 ## API Credits

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "generate-sample": "node src/generate-sample-data.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["weather", "tracking", "yr.no"],

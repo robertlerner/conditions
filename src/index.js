@@ -36,7 +36,7 @@ async function fetchWeather(latitude, longitude) {
   };
 }
 
-// Append data to Google Sheets
+// Append data to Google Sheets (long format)
 async function appendToSheet(auth, locations, weatherData) {
   const sheets = google.sheets({ version: 'v4', auth });
   const spreadsheetId = process.env.SHEET_ID;
@@ -45,59 +45,38 @@ async function appendToSheet(auth, locations, weatherData) {
   const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
   const hour = now.getUTCHours().toString().padStart(2, '0'); // HH
 
-  // Get existing headers
-  const headerRange = 'Sheet1!A1:ZZ1';
+  // Check if headers exist, create if not
+  const headerRange = 'Sheet1!A1:D1';
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange
   });
 
-  let existingHeaders = headerResponse.data.values?.[0] || [];
+  const existingHeaders = headerResponse.data.values?.[0] || [];
 
-  // Initialize headers if sheet is empty
   if (existingHeaders.length === 0) {
-    existingHeaders = ['Date', 'Hour'];
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range: 'Sheet1!A1',
       valueInputOption: 'RAW',
-      resource: { values: [existingHeaders] }
+      resource: { values: [['Date', 'Hour', 'Location', 'Temperature']] }
     });
   }
 
-  // Check for new location names and add them as columns
-  const currentLocationNames = existingHeaders.slice(2); // Skip Date and Hour
-  const newLocationNames = locations
-    .map(l => l.name)
-    .filter(name => !currentLocationNames.includes(name));
+  // Build rows: one row per location
+  const rows = weatherData.map(weather => [
+    date,
+    hour,
+    weather.location,
+    weather.temperature
+  ]);
 
-  if (newLocationNames.length > 0) {
-    console.log(`Adding new location columns: ${newLocationNames.join(', ')}`);
-    existingHeaders.push(...newLocationNames);
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: 'Sheet1!A1',
-      valueInputOption: 'RAW',
-      resource: { values: [existingHeaders] }
-    });
-  }
-
-  // Build row with temperatures in correct column order
-  const row = [date, hour];
-
-  // Add temperature for each column (skip Date and Hour)
-  for (let i = 2; i < existingHeaders.length; i++) {
-    const locationName = existingHeaders[i];
-    const weather = weatherData.find(w => w.location === locationName);
-    row.push(weather ? weather.temperature : '');
-  }
-
-  // Append the data row
+  // Append all rows at once
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:ZZ',
+    range: 'Sheet1!A:D',
     valueInputOption: 'RAW',
-    resource: { values: [row] }
+    resource: { values: rows }
   });
 }
 
