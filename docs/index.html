@@ -39,6 +39,17 @@
       margin-bottom: 15px;
       color: #444;
       font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chart-wrapper h2 a {
+      font-size: 14px;
+      color: #2196F3;
+      text-decoration: none;
+    }
+    .chart-wrapper h2 a:hover {
+      text-decoration: underline;
     }
     .chart-wrapper canvas {
       max-height: 300px;
@@ -63,6 +74,20 @@
     const SHEET_ID = '1wPqlgJc83YASKPFbduuAnIooPvPXBMiVUhn4jSPDXxY';
     const SHEET_NAME = 'Sheet1';
     const DAYS_TO_SHOW = 60; // Last 60 days
+
+    // Location coordinates for map links
+    const LOCATION_COORDS = {
+      "Töftfossen": { lat: 62.4276937, lon: 9.5877706 },
+      "Vinstra": { lat: 62.5131938, lon: 9.6361003 },
+      "Jukulkula": { lat: 61.8079223, lon: 9.3389395 },
+      "Thorfossen": { lat: 61.0284129, lon: 7.6697203 },
+      "Hydnefossen": { lat: 60.8120288, lon: 8.6221037 },
+      "Tågbekken, Litchdalen": { lat: 62.589781, lon: 8.5289662 },
+      "Mardalsfossen, nedre": { lat: 62.4719323, lon: 8.1202897 },
+      "Brudslöret, eikesdal": { lat: 62.4097087, lon: 8.3688476 },
+      "Code red": { lat: 59.063172, lon: 7.5502945 },
+      "Vinnu, Sunndalen": { lat: 62.6628477, lon: 8.670175 }
+    };
 
     async function loadData() {
       try {
@@ -158,7 +183,19 @@
       wrapper.className = 'chart-wrapper';
 
       const title = document.createElement('h2');
-      title.textContent = location;
+      const locationName = document.createTextNode(location);
+      title.appendChild(locationName);
+
+      // Add map link if coordinates are available
+      const coords = LOCATION_COORDS[location];
+      if (coords) {
+        const mapLink = document.createElement('a');
+        mapLink.href = `https://norgeskart.no/#!?project=norgeskart&layers=1002&zoom=13&lat=${coords.lat}&lon=${coords.lon}`;
+        mapLink.target = '_blank';
+        mapLink.textContent = '📍 View on map';
+        title.appendChild(mapLink);
+      }
+
       wrapper.appendChild(title);
 
       const canvas = document.createElement('canvas');
