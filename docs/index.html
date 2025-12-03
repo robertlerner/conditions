@@ -190,7 +190,8 @@
       const coords = LOCATION_COORDS[location];
       if (coords) {
         const mapLink = document.createElement('a');
-        mapLink.href = `https://norgeskart.no/#!?project=norgeskart&layers=1002&zoom=13&lat=${coords.lat}&lon=${coords.lon}`;
+        // Use search format with lat,lon - norgeskart will search for it
+        mapLink.href = `https://norgeskart.no/#!?project=norgeskart&zoom=14&sok=${encodeURIComponent(coords.lat + ',' + coords.lon)}`;
         mapLink.target = '_blank';
         mapLink.textContent = '📍 View on map';
         title.appendChild(mapLink);
