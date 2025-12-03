@@ -1,0 +1,54 @@
+{
+  "locations": [
+    {
+      "name": "Töftfossen",
+      "latitude": 62.4276937,
+      "longitude": 9.5877706
+    },
+    {
+      "name": "Vinstra",
+      "latitude": 62.5131938,
+      "longitude": 9.6361003
+    },
+    {
+      "name": "Jukulkula",
+      "latitude": 61.8079223,
+      "longitude": 9.3389395
+    },
+    {
+      "name": "Thorfossen",
+      "latitude": 61.0284129,
+      "longitude": 7.6697203
+    },
+    {
+      "name": "Hydnefossen",
+      "latitude": 60.8120288,
+      "longitude": 8.6221037
+    },  
+    {
+      "name": "Tågbekken, Litchdalen",
+      "latitude": 62.589781,
+      "longitude": 8.5289662
+    },    
+    {
+      "name": "Mardalsfossen, nedre",
+      "latitude": 62.4719323,
+      "longitude": 8.1202897
+    },   
+    {
+      "name": "Brudslöret, eikesdal",
+      "latitude": 62.4097087,
+      "longitude": 8.3688476
+    },  
+    {
+      "name": "Code red",
+      "latitude": 59.063172,
+      "longitude": 7.5502945
+    } ,  
+    {
+      "name": "Vinnu, Sunndalen",
+      "latitude": 62.6628477,
+      "longitude": 8.670175
+    }  
+  ]
+}

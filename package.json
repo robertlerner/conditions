@@ -1,0 +1,18 @@
+{
+  "name": "conditions-watch",
+  "version": "1.0.0",
+  "description": "Track weather conditions at GPS coordinates and log to Google Sheets",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["weather", "tracking", "yr.no"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^129.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}
