@@ -83,12 +83,34 @@
 
     function parseCSV(csv) {
       const lines = csv.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+
+      // Proper CSV parsing that handles quoted fields with commas
+      function parseLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current);
+
+        return values;
+      }
 
       const data = [];
       for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
-        if (values.length === headers.length) {
+        const values = parseLine(lines[i]);
+        if (values.length >= 4) {
           data.push({
             date: values[0],
             hour: values[1],
