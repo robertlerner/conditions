@@ -13,39 +13,55 @@ async function loadLocations() {
   return JSON.parse(data).locations;
 }
 
-// Fetch weather from yr.no Nowcast API
+// Fetch weather from yr.no APIs
 async function fetchWeather(latitude, longitude) {
-  const url = `https://api.met.no/weatherapi/nowcast/2.0/complete?lat=${latitude}&lon=${longitude}`;
-
-  const response = await fetch(url, {
+  // Fetch from Nowcast for temp and precipitation
+  const nowcastUrl = `https://api.met.no/weatherapi/nowcast/2.0/complete?lat=${latitude}&lon=${longitude}`;
+  const nowcastResponse = await fetch(nowcastUrl, {
     headers: {
       'User-Agent': 'conditions-watch/1.0 github.com/robertlerner/conditions'
     }
   });
 
-  if (!response.ok) {
-    throw new Error(`Weather API error: ${response.status}`);
+  if (!nowcastResponse.ok) {
+    throw new Error(`Nowcast API error: ${nowcastResponse.status}`);
   }
 
-  const data = await response.json();
-  const timeseries = data.properties.timeseries;
+  const nowcastData = await nowcastResponse.json();
+  const nowcastTimeseries = nowcastData.properties.timeseries;
 
   // Get current temperature
-  const current = timeseries[0];
+  const current = nowcastTimeseries[0];
   const temperature = current.data.instant.details.air_temperature;
 
-  // Sum precipitation over next 6 hours (or as many hours as available)
+  // Sum precipitation over next 6 hours
   let precipitationSum = 0;
-  for (let i = 0; i < Math.min(6, timeseries.length); i++) {
-    const entry = timeseries[i];
+  for (let i = 0; i < Math.min(6, nowcastTimeseries.length); i++) {
+    const entry = nowcastTimeseries[i];
     if (entry.data.next_1_hours?.details?.precipitation_amount !== undefined) {
       precipitationSum += entry.data.next_1_hours.details.precipitation_amount;
     }
   }
 
+  // Fetch from Locationforecast for cloud cover
+  const forecastUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${latitude}&lon=${longitude}`;
+  const forecastResponse = await fetch(forecastUrl, {
+    headers: {
+      'User-Agent': 'conditions-watch/1.0 github.com/robertlerner/conditions'
+    }
+  });
+
+  let cloudCover = null;
+  if (forecastResponse.ok) {
+    const forecastData = await forecastResponse.json();
+    const forecastCurrent = forecastData.properties.timeseries[0];
+    cloudCover = forecastCurrent.data.instant.details.cloud_area_fraction || 0;
+  }
+
   return {
     temperature,
     precipitation: precipitationSum,
+    cloudCover,
     timestamp: current.time
   };
 }
@@ -60,7 +76,7 @@ async function appendToSheet(auth, locations, weatherData) {
   const hour = now.getUTCHours().toString().padStart(2, '0'); // HH
 
   // Check if headers exist, create if not
-  const headerRange = 'Sheet1!A1:E1';
+  const headerRange = 'Sheet1!A1:F1';
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange
@@ -73,7 +89,7 @@ async function appendToSheet(auth, locations, weatherData) {
       spreadsheetId,
       range: 'Sheet1!A1',
       valueInputOption: 'RAW',
-      resource: { values: [['Date', 'Hour', 'Location', 'Temperature', 'Precipitation']] }
+      resource: { values: [['Date', 'Hour', 'Location', 'Temperature', 'Precipitation', 'CloudCover']] }
     });
   }
 
@@ -83,13 +99,14 @@ async function appendToSheet(auth, locations, weatherData) {
     hour,
     weather.location,
     weather.temperature,
-    weather.precipitation
+    weather.precipitation,
+    weather.cloudCover
   ]);
 
   // Append all rows at once
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:E',
+    range: 'Sheet1!A:F',
     valueInputOption: 'RAW',
     resource: { values: rows }
   });
@@ -117,9 +134,10 @@ async function main() {
         latitude: location.latitude,
         longitude: location.longitude,
         temperature: weather.temperature,
-        precipitation: weather.precipitation
+        precipitation: weather.precipitation,
+        cloudCover: weather.cloudCover
       });
-      console.log(`  Temperature: ${weather.temperature}°C, Precipitation (6h): ${weather.precipitation}mm (timestamp: ${weather.timestamp})`);
+      console.log(`  Temperature: ${weather.temperature}°C, Precipitation (6h): ${weather.precipitation}mm, Cloud cover: ${weather.cloudCover}% (timestamp: ${weather.timestamp})`);
 
       // Be nice to yr.no API
       await new Promise(resolve => setTimeout(resolve, 1000));

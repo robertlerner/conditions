@@ -149,7 +149,8 @@
             hour: values[1],
             location: values[2],
             temperature: parseFloat(values[3]),
-            precipitation: values[4] ? parseFloat(values[4]) : 0
+            precipitation: values[4] ? parseFloat(values[4]) : 0,
+            cloudCover: values[5] ? parseFloat(values[5]) : null
           });
         }
       }
@@ -233,6 +234,14 @@
         return '#D32F2F';                 // red
       });
 
+      // Point style: star for clear skies (< 25% clouds), circle otherwise
+      const pointStyles = data.map(d => {
+        if (d.cloudCover !== null && d.cloudCover < 25) {
+          return 'star';
+        }
+        return 'circle';
+      });
+
       // Prepare precipitation data for bars (scaled to fit 0-10 range)
       const precipitations = data.map(d => d.precipitation || 0);
 
@@ -259,8 +268,9 @@
               data: temperatures.map((temp, i) => ({ x: i, y: temp })),
               backgroundColor: pointColors,
               borderColor: pointColors,
-              pointRadius: 4,
-              pointHoverRadius: 6,
+              pointStyle: pointStyles,
+              pointRadius: 6,
+              pointHoverRadius: 8,
               yAxisID: 'y-temp',
               order: 1
             }
@@ -310,7 +320,11 @@
                   const clamped = Math.abs(actualTemp - context.parsed.y) > 0.1;
                   const tempDisplay = clamped ? `${actualTemp.toFixed(1)}°C (capped at ${displayTemp}°C)` : `${displayTemp}°C`;
 
-                  return `${tempDisplay}${status}`;
+                  // Add cloud cover info
+                  const cloudCover = data[dataIndex].cloudCover;
+                  const cloudInfo = cloudCover !== null ? ` | Cloud cover: ${cloudCover.toFixed(0)}%${cloudCover < 25 ? ' ⭐' : ''}` : '';
+
+                  return `${tempDisplay}${status}${cloudInfo}`;
                 }
               }
             },
