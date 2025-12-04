@@ -234,12 +234,16 @@
         return '#D32F2F';                 // red
       });
 
-      // Point style: star for clear skies (< 25% clouds), circle otherwise
-      const pointStyles = data.map(d => {
+      // Separate clear sky (star) data from cloudy (circle) data
+      const clearSkyIndices = [];
+      const cloudyIndices = [];
+
+      data.forEach((d, i) => {
         if (d.cloudCover !== null && d.cloudCover < 25) {
-          return 'star';
+          clearSkyIndices.push(i);
+        } else {
+          cloudyIndices.push(i);
         }
-        return 'circle';
       });
 
       // Prepare precipitation data for bars (scaled to fit 0-10 range)
@@ -261,16 +265,41 @@
               base: 0,
               barThickness: 2,
               maxBarThickness: 2,
+              order: 3
+            },
+            // Yellow circles behind stars
+            {
+              label: 'Clear Sky Background',
+              data: clearSkyIndices.map(i => ({ x: i, y: temperatures[i] })),
+              backgroundColor: '#FFD700',
+              borderColor: '#FFD700',
+              pointStyle: 'circle',
+              pointRadius: 7,
+              pointHoverRadius: 9,
+              yAxisID: 'y-temp',
               order: 2
             },
+            // Stars on top of yellow circles (clear skies)
             {
-              label: 'Temperature (°C)',
-              data: temperatures.map((temp, i) => ({ x: i, y: temp })),
-              backgroundColor: pointColors,
-              borderColor: pointColors,
-              pointStyle: pointStyles,
-              pointRadius: 6,
-              pointHoverRadius: 8,
+              label: 'Temperature (Clear Sky)',
+              data: clearSkyIndices.map(i => ({ x: i, y: temperatures[i] })),
+              backgroundColor: clearSkyIndices.map(i => pointColors[i]),
+              borderColor: clearSkyIndices.map(i => pointColors[i]),
+              pointStyle: 'star',
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              yAxisID: 'y-temp',
+              order: 1
+            },
+            // Regular circles (cloudy)
+            {
+              label: 'Temperature (Cloudy)',
+              data: cloudyIndices.map(i => ({ x: i, y: temperatures[i] })),
+              backgroundColor: cloudyIndices.map(i => pointColors[i]),
+              borderColor: cloudyIndices.map(i => pointColors[i]),
+              pointStyle: 'circle',
+              pointRadius: 3,
+              pointHoverRadius: 5,
               yAxisID: 'y-temp',
               order: 1
             }
