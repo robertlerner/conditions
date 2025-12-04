@@ -340,6 +340,11 @@
                     return `Precipitation: ${precip.toFixed(1)}mm (next 6h)`;
                   }
 
+                  // Skip yellow background layer (dataset 1)
+                  if (datasetIndex === 1) {
+                    return null;
+                  }
+
                   // Temperature dataset
                   const actualTemp = data[dataIndex].temperature || 0;
                   const displayTemp = context.parsed.y.toFixed(1);
