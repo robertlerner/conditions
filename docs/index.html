@@ -141,7 +141,8 @@
             date: values[0],
             hour: values[1],
             location: values[2],
-            temperature: parseFloat(values[3])
+            temperature: parseFloat(values[3]),
+            precipitation: values[4] ? parseFloat(values[4]) : 0
           });
         }
       }
@@ -225,18 +226,35 @@
         return '#D32F2F';                 // red
       });
 
+      // Prepare precipitation data for bars (scaled to fit 0-10 range)
+      const precipitations = data.map(d => d.precipitation || 0);
+
       new Chart(canvas, {
         type: 'scatter',
         data: {
           labels: labels,
-          datasets: [{
-            label: 'Temperature (°C)',
-            data: temperatures.map((temp, i) => ({ x: i, y: temp })),
-            backgroundColor: pointColors,
-            borderColor: pointColors,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }]
+          datasets: [
+            {
+              label: 'Precipitation (mm)',
+              type: 'bar',
+              data: precipitations.map((precip, i) => ({ x: i, y: precip })),
+              backgroundColor: 'rgba(100, 181, 246, 0.5)',
+              borderColor: 'rgba(66, 165, 245, 0.8)',
+              borderWidth: 1,
+              yAxisID: 'y-precip',
+              order: 2
+            },
+            {
+              label: 'Temperature (°C)',
+              data: temperatures.map((temp, i) => ({ x: i, y: temp })),
+              backgroundColor: pointColors,
+              borderColor: pointColors,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y-temp',
+              order: 1
+            }
+          ]
         },
         options: {
           responsive: true,
@@ -251,7 +269,17 @@
                   return labels[context[0].parsed.x];
                 },
                 label: function(context) {
-                  const actualTemp = data[context[0].parsed.x].temperature;
+                  const dataIndex = context[0].parsed.x;
+                  const datasetIndex = context[0].datasetIndex;
+
+                  // Precipitation dataset
+                  if (datasetIndex === 0) {
+                    const precip = data[dataIndex].precipitation || 0;
+                    return `Precipitation: ${precip.toFixed(1)}mm (next 6h)`;
+                  }
+
+                  // Temperature dataset
+                  const actualTemp = data[dataIndex].temperature;
                   const displayTemp = context.parsed.y.toFixed(1);
                   let status = '';
                   if (actualTemp < -10) status = ' (Really Good!)';
@@ -325,8 +353,9 @@
                 autoSkip: true
               }
             },
-            y: {
+            'y-temp': {
               display: true,
+              position: 'left',
               min: -20,
               max: 10,
               title: {
@@ -335,6 +364,19 @@
               },
               ticks: {
                 stepSize: 5
+              }
+            },
+            'y-precip': {
+              display: true,
+              position: 'right',
+              min: 0,
+              max: 10,
+              title: {
+                display: true,
+                text: 'Precipitation (mm/6h)'
+              },
+              grid: {
+                drawOnChartArea: false
               }
             }
           }

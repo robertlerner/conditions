@@ -28,10 +28,24 @@ async function fetchWeather(latitude, longitude) {
   }
 
   const data = await response.json();
-  const current = data.properties.timeseries[0];
+  const timeseries = data.properties.timeseries;
+
+  // Get current temperature
+  const current = timeseries[0];
+  const temperature = current.data.instant.details.air_temperature;
+
+  // Sum precipitation over next 6 hours (or as many hours as available)
+  let precipitationSum = 0;
+  for (let i = 0; i < Math.min(6, timeseries.length); i++) {
+    const entry = timeseries[i];
+    if (entry.data.next_1_hours?.details?.precipitation_amount !== undefined) {
+      precipitationSum += entry.data.next_1_hours.details.precipitation_amount;
+    }
+  }
 
   return {
-    temperature: current.data.instant.details.air_temperature,
+    temperature,
+    precipitation: precipitationSum,
     timestamp: current.time
   };
 }
@@ -46,7 +60,7 @@ async function appendToSheet(auth, locations, weatherData) {
   const hour = now.getUTCHours().toString().padStart(2, '0'); // HH
 
   // Check if headers exist, create if not
-  const headerRange = 'Sheet1!A1:D1';
+  const headerRange = 'Sheet1!A1:E1';
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange
@@ -59,7 +73,7 @@ async function appendToSheet(auth, locations, weatherData) {
       spreadsheetId,
       range: 'Sheet1!A1',
       valueInputOption: 'RAW',
-      resource: { values: [['Date', 'Hour', 'Location', 'Temperature']] }
+      resource: { values: [['Date', 'Hour', 'Location', 'Temperature', 'Precipitation']] }
     });
   }
 
@@ -68,13 +82,14 @@ async function appendToSheet(auth, locations, weatherData) {
     date,
     hour,
     weather.location,
-    weather.temperature
+    weather.temperature,
+    weather.precipitation
   ]);
 
   // Append all rows at once
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:D',
+    range: 'Sheet1!A:E',
     valueInputOption: 'RAW',
     resource: { values: rows }
   });
@@ -101,9 +116,10 @@ async function main() {
         location: location.name,
         latitude: location.latitude,
         longitude: location.longitude,
-        temperature: weather.temperature
+        temperature: weather.temperature,
+        precipitation: weather.precipitation
       });
-      console.log(`  Temperature: ${weather.temperature}°C (timestamp: ${weather.timestamp})`);
+      console.log(`  Temperature: ${weather.temperature}°C, Precipitation (6h): ${weather.precipitation}mm (timestamp: ${weather.timestamp})`);
 
       // Be nice to yr.no API
       await new Promise(resolve => setTimeout(resolve, 1000));
