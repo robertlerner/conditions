@@ -241,7 +241,10 @@
               backgroundColor: 'rgba(100, 181, 246, 0.5)',
               borderColor: 'rgba(66, 165, 245, 0.8)',
               borderWidth: 1,
-              yAxisID: 'y-precip',
+              yAxisID: 'y-temp',
+              base: 0,
+              barThickness: 2,
+              maxBarThickness: 2,
               order: 2
             },
             {
@@ -272,9 +275,10 @@
                   const dataIndex = context[0].parsed.x;
                   const datasetIndex = context[0].datasetIndex;
 
+                  const precip = data[dataIndex].precipitation || 0;
+
                   // Precipitation dataset
                   if (datasetIndex === 0) {
-                    const precip = data[dataIndex].precipitation || 0;
                     return `Precipitation: ${precip.toFixed(1)}mm (next 6h)`;
                   }
 
@@ -290,7 +294,12 @@
                   // Show if clamped
                   const clamped = actualTemp !== context.parsed.y;
                   const tempDisplay = clamped ? `${actualTemp.toFixed(1)}°C (capped at ${displayTemp}°C)` : `${displayTemp}°C`;
-                  return `${tempDisplay}${status}`;
+
+                  // Include precipitation in temperature tooltip
+                  return [
+                    `${tempDisplay}${status}`,
+                    `Precipitation: ${precip.toFixed(1)}mm`
+                  ];
                 }
               }
             },
@@ -367,17 +376,7 @@
               }
             },
             'y-precip': {
-              display: true,
-              position: 'right',
-              min: 0,
-              max: 10,
-              title: {
-                display: true,
-                text: 'Precipitation (mm/6h)'
-              },
-              grid: {
-                drawOnChartArea: false
-              }
+              display: false
             }
           }
         }
