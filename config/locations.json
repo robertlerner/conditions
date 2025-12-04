@@ -59,6 +59,31 @@
       "name": "Lipton",
       "latitude": 59.877704,
       "longitude": 8.5546708
+    } ,  
+    {
+      "name": "Langåni",
+      "latitude": 61.1771175,
+      "longitude": 8.4204999
+    }   ,  
+    {
+      "name": "Stavadalen",
+      "latitude": 60.832396,
+      "longitude": 9.3787648
+    },    
+    {
+      "name": "Bakkenkollen, Bagn",
+      "latitude": 60.5529,
+      "longitude": 9.8254
+    },      
+    {
+      "name": "Grindane, Vagn",
+      "latitude": 61.1053,
+      "longitude": 8.5296
+    },    
+    {
+      "name": "Skiri, Romsdalen",
+      "latitude": 62.4326715,
+      "longitude": 7.9373157
     }  
   ]
 }
