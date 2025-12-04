@@ -203,14 +203,22 @@
       wrapper.appendChild(canvas);
 
       const labels = data.map(d => `${d.date} ${d.hour}:00`);
-      const temperatures = data.map(d => d.temperature);
 
-      // Color code each point based on temperature
+      // Clamp temperatures to -20 to 10 range for display
+      const temperatures = data.map(d => {
+        const temp = d.temperature;
+        if (temp < -20) return -20;
+        if (temp > 10) return 10;
+        return temp;
+      });
+
+      // Color code each point based on ACTUAL temperature (before clamping)
       // < -10: really good (dark green)
       // -10 to 0: good (light green)
       // 0 to 5: bad (orange)
       // > 5: really bad (red)
-      const pointColors = temperatures.map(temp => {
+      const pointColors = data.map(d => {
+        const temp = d.temperature;
         if (temp < -10) return '#1B5E20'; // dark green
         if (temp < 0) return '#4CAF50';   // light green
         if (temp < 5) return '#FF9800';   // orange
@@ -243,13 +251,18 @@
                   return labels[context[0].parsed.x];
                 },
                 label: function(context) {
-                  const temp = context.parsed.y.toFixed(1);
+                  const actualTemp = data[context[0].parsed.x].temperature;
+                  const displayTemp = context.parsed.y.toFixed(1);
                   let status = '';
-                  if (context.parsed.y < -10) status = ' (Really Good!)';
-                  else if (context.parsed.y < 0) status = ' (Good)';
-                  else if (context.parsed.y < 5) status = ' (Bad)';
+                  if (actualTemp < -10) status = ' (Really Good!)';
+                  else if (actualTemp < 0) status = ' (Good)';
+                  else if (actualTemp < 5) status = ' (Bad)';
                   else status = ' (Really Bad!)';
-                  return `${temp}°C${status}`;
+
+                  // Show if clamped
+                  const clamped = actualTemp !== context.parsed.y;
+                  const tempDisplay = clamped ? `${actualTemp.toFixed(1)}°C (capped at ${displayTemp}°C)` : `${displayTemp}°C`;
+                  return `${tempDisplay}${status}`;
                 }
               }
             },
@@ -257,7 +270,7 @@
               annotations: {
                 reallyGoodZone: {
                   type: 'box',
-                  yMin: -40,
+                  yMin: -20,
                   yMax: -10,
                   backgroundColor: 'rgba(27, 94, 32, 0.1)',
                   borderWidth: 0
@@ -279,7 +292,7 @@
                 reallyBadZone: {
                   type: 'box',
                   yMin: 5,
-                  yMax: 40,
+                  yMax: 10,
                   backgroundColor: 'rgba(211, 47, 47, 0.1)',
                   borderWidth: 0
                 },
@@ -314,9 +327,14 @@
             },
             y: {
               display: true,
+              min: -20,
+              max: 10,
               title: {
                 display: true,
                 text: 'Temperature (°C)'
+              },
+              ticks: {
+                stepSize: 5
               }
             }
           }
