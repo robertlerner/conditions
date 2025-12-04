@@ -272,12 +272,16 @@
               label: 'Clear Sky Background',
               data: clearSkyIndices.map(i => ({ x: i, y: temperatures[i] })),
               backgroundColor: '#FFD700',
-              borderColor: '#FFD700',
+              borderColor: '#000000',
+              borderWidth: 1,
               pointStyle: 'circle',
-              pointRadius: 7,
-              pointHoverRadius: 9,
+              pointRadius: 5,
+              pointHoverRadius: 5,
               yAxisID: 'y-temp',
-              order: 2
+              order: 2,
+              tooltip: {
+                enabled: false
+              }
             },
             // Stars on top of yellow circles (clear skies)
             {
