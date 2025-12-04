@@ -267,8 +267,8 @@
               display: false
             },
             tooltip: {
-              mode: 'index',
-              intersect: false,
+              mode: 'nearest',
+              intersect: true,
               callbacks: {
                 title: function(tooltipItems) {
                   if (!tooltipItems || !tooltipItems.length) return '';
