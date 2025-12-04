@@ -13,13 +13,13 @@ async function loadLocations() {
   return JSON.parse(data).locations;
 }
 
-// Fetch weather from yr.no
+// Fetch weather from yr.no Nowcast API
 async function fetchWeather(latitude, longitude) {
-  const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${latitude}&lon=${longitude}`;
+  const url = `https://api.met.no/weatherapi/nowcast/2.0/complete?lat=${latitude}&lon=${longitude}`;
 
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'conditions-watch/1.0 github.com/yourusername/conditions-watch'
+      'User-Agent': 'conditions-watch/1.0 github.com/robertlerner/conditions'
     }
   });
 
@@ -83,7 +83,10 @@ async function appendToSheet(auth, locations, weatherData) {
 // Main execution
 async function main() {
   try {
-    console.log('Starting weather check...');
+    const dryRun = process.argv.includes('--dry-run');
+
+    console.log('Starting weather check (using Nowcast API)...');
+    if (dryRun) console.log('🔍 DRY RUN MODE - Will not write to Google Sheets');
 
     // Load locations
     const locations = await loadLocations();
@@ -100,10 +103,15 @@ async function main() {
         longitude: location.longitude,
         temperature: weather.temperature
       });
-      console.log(`  Temperature: ${weather.temperature}°C`);
+      console.log(`  Temperature: ${weather.temperature}°C (timestamp: ${weather.timestamp})`);
 
       // Be nice to yr.no API
       await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    if (dryRun) {
+      console.log('\n✅ Dry run complete! Data fetched successfully but not written to sheet.');
+      return;
     }
 
     // Authenticate with Google Sheets
