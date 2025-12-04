@@ -270,12 +270,18 @@
               mode: 'index',
               intersect: false,
               callbacks: {
-                title: function(context) {
-                  return labels[context[0].parsed.x];
+                title: function(tooltipItems) {
+                  if (!tooltipItems || !tooltipItems.length) return '';
+                  const idx = Math.round(tooltipItems[0].parsed.x);
+                  return labels[idx] || '';
                 },
                 label: function(context) {
-                  const dataIndex = context[0].parsed.x;
-                  const datasetIndex = context[0].datasetIndex;
+                  if (!context || !context.parsed) return '';
+
+                  const dataIndex = Math.round(context.parsed.x);
+                  const datasetIndex = context.datasetIndex;
+
+                  if (dataIndex < 0 || dataIndex >= data.length) return '';
 
                   const precip = data[dataIndex].precipitation || 0;
 
@@ -285,7 +291,7 @@
                   }
 
                   // Temperature dataset
-                  const actualTemp = data[dataIndex].temperature;
+                  const actualTemp = data[dataIndex].temperature || 0;
                   const displayTemp = context.parsed.y.toFixed(1);
                   let status = '';
                   if (actualTemp < -10) status = ' (Really Good!)';
@@ -294,14 +300,10 @@
                   else status = ' (Really Bad!)';
 
                   // Show if clamped
-                  const clamped = actualTemp !== context.parsed.y;
+                  const clamped = Math.abs(actualTemp - context.parsed.y) > 0.1;
                   const tempDisplay = clamped ? `${actualTemp.toFixed(1)}°C (capped at ${displayTemp}°C)` : `${displayTemp}°C`;
 
-                  // Include precipitation in temperature tooltip
-                  return [
-                    `${tempDisplay}${status}`,
-                    `Precipitation: ${precip.toFixed(1)}mm`
-                  ];
+                  return `${tempDisplay}${status}`;
                 }
               }
             },
