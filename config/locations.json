@@ -39,6 +39,11 @@
       "name": "Brudslöret, eikesdal",
       "latitude": 62.4097087,
       "longitude": 8.3688476
+    },    
+    {
+      "name": "Vettisfossen",
+      "latitude": 61.380309,
+      "longitude": 7.9454885
     },  
     {
       "name": "Code red",
@@ -49,6 +54,11 @@
       "name": "Vinnu, Sunndalen",
       "latitude": 62.6628477,
       "longitude": 8.670175
+    }   ,  
+    {
+      "name": "Lipton",
+      "latitude": 59.877704,
+      "longitude": 8.5546708
     }  
   ]
 }
