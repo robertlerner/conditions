@@ -62,6 +62,54 @@
     .chart-wrapper h2 a:hover {
       text-decoration: underline;
     }
+    .image-icon {
+      cursor: pointer;
+      font-size: 18px;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+    .image-icon:hover {
+      transform: scale(1.2);
+    }
+    .image-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s;
+    }
+    .image-overlay.active {
+      display: flex;
+    }
+    .image-overlay img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .image-overlay-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    .image-overlay-close:hover {
+      color: #ccc;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
     .chart-wrapper canvas {
       max-height: 300px;
       width: 100% !important;
@@ -80,6 +128,9 @@
       }
       .chart-wrapper h2 .date-range {
         display: inline;
+      }
+      .chart-wrapper h2 .map-link-text {
+        display: none;
       }
       .chart-wrapper canvas {
         max-height: 250px;
@@ -100,11 +151,33 @@
   <div id="error" class="error" style="display:none;"></div>
   <div id="charts" class="charts-container"></div>
 
+  <!-- Image Overlay -->
+  <div id="imageOverlay" class="image-overlay" onclick="hideImageOverlay()">
+    <span class="image-overlay-close">&times;</span>
+    <img id="overlayImage" src="" alt="" onclick="event.stopPropagation()">
+  </div>
+
   <script>
     // REPLACE THIS WITH YOUR GOOGLE SHEET ID
     const SHEET_ID = '1wPqlgJc83YASKPFbduuAnIooPvPXBMiVUhn4jSPDXxY';
     const SHEET_NAME = 'Sheet1';
     const DAYS_TO_SHOW = 60; // Last 60 days
+
+    // Locations with images available
+    const LOCATIONS_WITH_IMAGES = [
+      "Brudslöret, eikesdal",
+      "Code red",
+      "Hydnefossen",
+      "Jukulkula",
+      "Langåni",
+      "Mardalsfossen, nedre",
+      "Stavadalen",
+      "Tågbekken, Litchdalen",
+      "Thorfossen",
+      "Töftfossen",
+      "Vinnu, Sunndalen",
+      "Vinstra"
+    ];
 
     // Location coordinates for map links
     const LOCATION_COORDS = {
@@ -232,6 +305,19 @@
       const dateRange = `(${formatDate(firstDate)} - ${formatDate(lastDate)})`;
 
       const title = document.createElement('h2');
+
+      // Add image icon first if image exists for this location
+      if (LOCATIONS_WITH_IMAGES.includes(location)) {
+        const imagePath = `img/${location}.jpeg`;
+        const imageIcon = document.createElement('span');
+        imageIcon.className = 'image-icon';
+        imageIcon.textContent = '📷';
+        imageIcon.title = 'View photo';
+        imageIcon.onmouseenter = () => showImageOverlay(imagePath, location);
+        imageIcon.onclick = () => showImageOverlay(imagePath, location); // For mobile
+        title.appendChild(imageIcon);
+      }
+
       const locationName = document.createTextNode(location + ' ');
       title.appendChild(locationName);
 
@@ -248,7 +334,7 @@
         // Use search format with lat,lon - norgeskart will search for it
         mapLink.href = `https://norgeskart.no/#!?project=norgeskart&zoom=15&sok=${encodeURIComponent(coords.lat + ',' + coords.lon)}`;
         mapLink.target = '_blank';
-        mapLink.textContent = '📍 View on map';
+        mapLink.innerHTML = '📍 <span class="map-link-text">View on map</span>';
         title.appendChild(mapLink);
       }
 
@@ -494,6 +580,19 @@
       return wrapper;
     }
 
+    function showImageOverlay(imagePath, locationName) {
+      const overlay = document.getElementById('imageOverlay');
+      const overlayImg = document.getElementById('overlayImage');
+      overlayImg.src = imagePath;
+      overlayImg.alt = locationName;
+      overlay.classList.add('active');
+    }
+
+    function hideImageOverlay() {
+      const overlay = document.getElementById('imageOverlay');
+      overlay.classList.remove('active');
+    }
+
     async function init() {
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
@@ -529,6 +628,13 @@
         error.style.display = 'block';
       }
     }
+
+    // ESC key to close overlay
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideImageOverlay();
+      }
+    });
 
     init();
   </script>
