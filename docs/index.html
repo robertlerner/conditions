@@ -48,6 +48,12 @@
       align-items: center;
       gap: 10px;
     }
+    .chart-wrapper h2 .date-range {
+      font-size: 14px;
+      color: #666;
+      font-weight: normal;
+      display: none;
+    }
     .chart-wrapper h2 a {
       font-size: 14px;
       color: #2196F3;
@@ -71,6 +77,9 @@
       .chart-wrapper h2 {
         font-size: 16px;
         flex-wrap: wrap;
+      }
+      .chart-wrapper h2 .date-range {
+        display: inline;
       }
       .chart-wrapper canvas {
         max-height: 250px;
@@ -213,9 +222,24 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'chart-wrapper';
 
+      // Get date range from data
+      const firstDate = data[0].date;
+      const lastDate = data[data.length - 1].date;
+      const formatDate = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      };
+      const dateRange = `(${formatDate(firstDate)} - ${formatDate(lastDate)})`;
+
       const title = document.createElement('h2');
-      const locationName = document.createTextNode(location);
+      const locationName = document.createTextNode(location + ' ');
       title.appendChild(locationName);
+
+      // Add date range span with class for mobile visibility
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'date-range';
+      dateSpan.textContent = dateRange;
+      title.appendChild(dateSpan);
 
       // Add map link if coordinates are available
       const coords = LOCATION_COORDS[location];
@@ -453,7 +477,7 @@
               min: -20,
               max: 10,
               title: {
-                display: true,
+                display: window.innerWidth > 768,
                 text: 'Temperature (°C)'
               },
               ticks: {
