@@ -143,10 +143,53 @@
       border-radius: 4px;
       margin: 20px 0;
     }
+    .intro {
+      max-width: 1400px;
+      margin: 0 auto 40px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      line-height: 1.6;
+      color: #555;
+    }
+    .intro p {
+      margin: 0 0 15px 0;
+    }
+    .intro p:last-child {
+      margin-bottom: 0;
+    }
+    .intro strong {
+      color: #333;
+    }
+    .intro .icon {
+      vertical-align: middle;
+      height: 20px;
+      width: 20px;
+      margin: 0 2px;
+    }
   </style>
 </head>
 <body>
   <h1>Weather Conditions Dashboard</h1>
+
+  <div class="intro">
+    <p>
+      This dashboard tracks ice climbing conditions across multiple locations in Norway.
+      Data is collected from <strong>met.no</strong> (Yr's APIs) four times daily, using interpolated weather models
+      between measurement stations. While not direct observations, the data provides a reliable indication of conditions.
+    </p>
+    <p>
+      <strong>How to read the charts:</strong> Dots show temperature readings, blue bars represent precipitation over the next 6 hours,
+      and an <strong>outlined circle <svg class="icon" viewBox="0 0 24 24" style="vertical-align: middle; height: 20px; width: 20px;"><circle cx="12" cy="12" r="8" fill="#FFD700" stroke="#000" stroke-width="2"/><path d="M12 6 L12 18 M6 12 L18 12 M8.5 8.5 L15.5 15.5 M15.5 8.5 L8.5 15.5" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"/></svg></strong> indicates high radiation (clear skies with cloud cover &lt;25%).
+    </p>
+    <p>
+      Measurement points are placed at the base of climbs, typically the most temperature-sensitive areas.
+      Use the <strong>📍 View on map</strong> link to see the exact location (you may need to zoom manually),
+      and the <strong>🌤️ Yr forecast</strong> link for the detailed forward-looking forecast.
+    </p>
+  </div>
+
   <div id="loading" class="loading">Loading data...</div>
   <div id="error" class="error" style="display:none;"></div>
   <div id="charts" class="charts-container"></div>
