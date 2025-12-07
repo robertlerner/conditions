@@ -163,6 +163,30 @@
     const SHEET_NAME = 'Sheet1';
     const DAYS_TO_SHOW = 60; // Last 60 days
 
+    // Locations configuration
+    const LOCATIONS_CONFIG = [
+      { name: "Töftfossen", latitude: 62.4276937, longitude: 9.5877706, area: "Oppdal" },
+      { name: "Vinstra", latitude: 62.5131938, longitude: 9.6361003, area: "Oppdal" },
+      { name: "Jukulkula", latitude: 61.8068182, longitude: 9.3382779, area: "Oppdal" },
+      { name: "Thorfossen", latitude: 61.0284129, longitude: 7.6697203, area: "Laerdal" },
+      { name: "Hydnefossen", latitude: 60.8120288, longitude: 8.6221037, area: "Hemsedal" },
+      { name: "Grötnuten", latitude: 60.8602061, longitude: 8.6125362, area: "Hemsedal" },
+      { name: "Tågbekken, Litchdalen", latitude: 62.589781, longitude: 8.5289662, area: "Sunndalen" },
+      { name: "Mardalsfossen, nedre", latitude: 62.4719323, longitude: 8.1202897, area: "Eikesdal" },
+      { name: "Brudslöret, eikesdal", latitude: 62.4097087, longitude: 8.3688476, area: "Eikesdal" },
+      { name: "Vettisfossen", latitude: 61.380309, longitude: 7.9454885, area: "Laerdal" },
+      { name: "Code red", latitude: 59.063172, longitude: 7.5502945, area: "Setesdal" },
+      { name: "Vinnu, Sunndalen", latitude: 62.6628477, longitude: 8.670175, area: "Sunndalen" },
+      { name: "Lipton", latitude: 59.877704, longitude: 8.5546708, area: "Rjukan" },
+      { name: "Langåni", latitude: 61.1771175, longitude: 8.4204999, area: "Valdres" },
+      { name: "Stavadalen", latitude: 60.832396, longitude: 9.3787648, area: "Valdres" },
+      { name: "Bakkenkollen, Bagn", latitude: 60.5529, longitude: 9.8254, area: "Valdres" },
+      { name: "Grindane, Vagn", latitude: 61.1053, longitude: 8.5296, area: "Valdres" },
+      { name: "Skiri, Romsdalen", latitude: 62.4326715, longitude: 7.9373157, area: "Romsdalen" },
+      { name: "Reppanuten", latitude: 60.806669, longitude: 7.3520529, area: "Aurland" },
+      { name: "Kjerrskredkvelven", latitude: 60.8648163, longitude: 6.8294383, area: "Aurland" }
+    ];
+
     // Locations with images available
     const LOCATIONS_WITH_IMAGES = [
       "Brudslöret, eikesdal",
@@ -291,6 +315,20 @@
       return groups;
     }
 
+    function groupLocationsByArea() {
+      const areaGroups = {};
+
+      LOCATIONS_CONFIG.forEach(loc => {
+        const area = loc.area || 'Other';
+        if (!areaGroups[area]) {
+          areaGroups[area] = [];
+        }
+        areaGroups[area].push(loc.name);
+      });
+
+      return areaGroups;
+    }
+
     function createChart(location, data) {
       const wrapper = document.createElement('div');
       wrapper.className = 'chart-wrapper';
@@ -327,15 +365,25 @@
       dateSpan.textContent = dateRange;
       title.appendChild(dateSpan);
 
-      // Add map link if coordinates are available
-      const coords = LOCATION_COORDS[location];
-      if (coords) {
+      // Add map link and yr.no forecast link if coordinates are available
+      const locationConfig = LOCATIONS_CONFIG.find(loc => loc.name === location);
+      if (locationConfig) {
         const mapLink = document.createElement('a');
         // Use search format with lat,lon - norgeskart will search for it
-        mapLink.href = `https://norgeskart.no/#!?project=norgeskart&zoom=15&sok=${encodeURIComponent(coords.lat + ',' + coords.lon)}`;
+        mapLink.href = `https://norgeskart.no/#!?project=norgeskart&zoom=15&sok=${encodeURIComponent(locationConfig.latitude + ',' + locationConfig.longitude)}`;
         mapLink.target = '_blank';
         mapLink.innerHTML = '📍 <span class="map-link-text">View on map</span>';
         title.appendChild(mapLink);
+
+        // Add yr.no forecast link
+        const yrLink = document.createElement('a');
+        const lat = locationConfig.latitude.toFixed(3);
+        const lon = locationConfig.longitude.toFixed(3);
+        yrLink.href = `https://www.yr.no/nb/detaljer/tabell/${lat},%20${lon}`;
+        yrLink.target = '_blank';
+        yrLink.innerHTML = '🌤️ <span class="map-link-text">Yr forecast</span>';
+        yrLink.style.marginLeft = '8px';
+        title.appendChild(yrLink);
       }
 
       wrapper.appendChild(title);
@@ -541,9 +589,14 @@
           },
           scales: {
             x: {
-              display: window.innerWidth > 768,
+              display: true,
               type: 'linear',
+              title: {
+                display: window.innerWidth <= 768,
+                text: 'Date'
+              },
               ticks: {
+                display: window.innerWidth > 768,
                 callback: function(value) {
                   if (value >= 0 && value < labels.length) {
                     const label = labels[Math.floor(value)];
@@ -563,10 +616,11 @@
               min: -20,
               max: 10,
               title: {
-                display: window.innerWidth > 768,
+                display: window.innerWidth <= 768,
                 text: 'Temperature (°C)'
               },
               ticks: {
+                display: window.innerWidth > 768,
                 stepSize: 5
               }
             },
@@ -614,12 +668,41 @@
           return;
         }
 
-        // Sort locations alphabetically
-        const locations = Object.keys(locationGroups).sort();
+        // Group locations by area from config
+        const areaGroups = groupLocationsByArea();
 
-        locations.forEach(location => {
-          const chart = createChart(location, locationGroups[location]);
-          chartsContainer.appendChild(chart);
+        // Sort areas alphabetically
+        const areas = Object.keys(areaGroups).sort();
+
+        // Change chartsContainer to block layout instead of grid
+        chartsContainer.style.display = 'block';
+
+        areas.forEach(area => {
+          // Create area header
+          const areaHeader = document.createElement('h2');
+          areaHeader.textContent = area;
+          areaHeader.style.marginTop = '40px';
+          areaHeader.style.marginBottom = '20px';
+          areaHeader.style.fontSize = '24px';
+          areaHeader.style.color = '#333';
+          chartsContainer.appendChild(areaHeader);
+
+          // Create grid container for this area
+          const areaGrid = document.createElement('div');
+          areaGrid.className = 'charts-container';
+
+          // Get locations for this area
+          const locationNames = areaGroups[area].sort();
+
+          locationNames.forEach(locationName => {
+            // Check if we have data for this location
+            if (locationGroups[locationName] && locationGroups[locationName].length > 0) {
+              const chart = createChart(locationName, locationGroups[locationName]);
+              areaGrid.appendChild(chart);
+            }
+          });
+
+          chartsContainer.appendChild(areaGrid);
         });
 
       } catch (err) {
