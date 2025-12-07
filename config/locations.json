@@ -3,88 +3,122 @@
     {
       "name": "Töftfossen",
       "latitude": 62.4276937,
-      "longitude": 9.5877706
+      "longitude": 9.5877706,
+      "area": "Oppdal"
     },
     {
       "name": "Vinstra",
       "latitude": 62.5131938,
-      "longitude": 9.6361003
+      "longitude": 9.6361003,
+      "area": "Oppdal"
     },
     {
       "name": "Jukulkula",
       "latitude": 61.8068182,
-      "longitude": 9.3382779
+      "longitude": 9.3382779,
+      "area": "Oppdal"
     },
     {
       "name": "Thorfossen",
       "latitude": 61.0284129,
-      "longitude": 7.6697203
+      "longitude": 7.6697203,
+      "area": "Laerdal"
     },
     {
       "name": "Hydnefossen",
-      "image": "hydne.jpeg",
       "latitude": 60.8120288,
-      "longitude": 8.6221037
+      "longitude": 8.6221037,
+      "area": "Hemsedal"
+    }, 
+    {
+      "name": "Grötnuten",
+      "latitude": 60.8602061,
+      "longitude": 8.6125362,
+      "area": "Hemsedal"
     },  
     {
       "name": "Tågbekken, Litchdalen",
       "latitude": 62.589781,
-      "longitude": 8.5289662
+      "longitude": 8.5289662,
+      "area": "Sunndalen"
     },    
     {
       "name": "Mardalsfossen, nedre",
       "latitude": 62.4719323,
-      "longitude": 8.1202897
+      "longitude": 8.1202897,
+      "area": "Eikesdal"
     },   
     {
       "name": "Brudslöret, eikesdal",
       "latitude": 62.4097087,
-      "longitude": 8.3688476
+      "longitude": 8.3688476,
+      "area": "Eikesdal"
     },    
     {
       "name": "Vettisfossen",
       "latitude": 61.380309,
-      "longitude": 7.9454885
+      "longitude": 7.9454885,
+      "area": "Laerdal"
     },  
     {
       "name": "Code red",
       "latitude": 59.063172,
-      "longitude": 7.5502945
+      "longitude": 7.5502945,
+      "area": "Setesdal"
     } ,  
     {
       "name": "Vinnu, Sunndalen",
       "latitude": 62.6628477,
-      "longitude": 8.670175
+      "longitude": 8.670175,
+      "area": "Sunndalen"
     }   ,  
     {
       "name": "Lipton",
       "latitude": 59.877704,
-      "longitude": 8.5546708
+      "longitude": 8.5546708,
+      "area": "Rjukan"
     } ,  
     {
       "name": "Langåni",
       "latitude": 61.1771175,
-      "longitude": 8.4204999
+      "longitude": 8.4204999,
+      "area": "Valdres"
     }   ,  
     {
       "name": "Stavadalen",
       "latitude": 60.832396,
-      "longitude": 9.3787648
+      "longitude": 9.3787648,
+      "area": "Valdres"
     },    
     {
       "name": "Bakkenkollen, Bagn",
       "latitude": 60.5529,
-      "longitude": 9.8254
+      "longitude": 9.8254,
+      "area": "Valdres"
     },      
     {
       "name": "Grindane, Vagn",
       "latitude": 61.1053,
-      "longitude": 8.5296
+      "longitude": 8.5296,
+      "area": "Valdres"
     },    
     {
       "name": "Skiri, Romsdalen",
       "latitude": 62.4326715,
-      "longitude": 7.9373157
-    }  
+      "longitude": 7.9373157,
+      "area": "Romsdalen"
+    } ,    
+    {
+      "name": "Reppanuten",
+      "latitude": 60.806669,
+      "longitude": 7.3520529,
+      "area": "Aurland"
+    } ,    
+    {
+      "name": "Kjerrskredkvelven",
+      "latitude": 60.8648163,
+      "longitude": 6.8294383,
+      "area": "Aurland"
+    } 
   ]
 }

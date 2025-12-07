@@ -76,7 +76,7 @@ async function appendToSheet(auth, locations, weatherData) {
   const hour = now.getUTCHours().toString().padStart(2, '0'); // HH
 
   // Check if headers exist, create if not
-  const headerRange = 'Sheet1!A1:F1';
+  const headerRange = 'Sheet1!A1:G1';
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange
@@ -89,7 +89,7 @@ async function appendToSheet(auth, locations, weatherData) {
       spreadsheetId,
       range: 'Sheet1!A1',
       valueInputOption: 'RAW',
-      resource: { values: [['Date', 'Hour', 'Location', 'Temperature', 'Precipitation', 'CloudCover']] }
+      resource: { values: [['Date', 'Hour', 'Area', 'Location', 'Temperature', 'Precipitation', 'CloudCover']] }
     });
   }
 
@@ -97,6 +97,7 @@ async function appendToSheet(auth, locations, weatherData) {
   const rows = weatherData.map(weather => [
     date,
     hour,
+    weather.area,
     weather.location,
     weather.temperature,
     weather.precipitation,
@@ -106,7 +107,7 @@ async function appendToSheet(auth, locations, weatherData) {
   // Append all rows at once
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:F',
+    range: 'Sheet1!A:G',
     valueInputOption: 'RAW',
     resource: { values: rows }
   });
@@ -124,23 +125,35 @@ async function main() {
     const locations = await loadLocations();
     console.log(`Loaded ${locations.length} locations`);
 
-    // Fetch weather for all locations
-    const weatherData = [];
-    for (const location of locations) {
-      console.log(`Fetching weather for ${location.name}...`);
-      const weather = await fetchWeather(location.latitude, location.longitude);
-      weatherData.push({
-        location: location.name,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        temperature: weather.temperature,
-        precipitation: weather.precipitation,
-        cloudCover: weather.cloudCover
-      });
-      console.log(`  Temperature: ${weather.temperature}°C, Precipitation (6h): ${weather.precipitation}mm, Cloud cover: ${weather.cloudCover}% (timestamp: ${weather.timestamp})`);
+    // Group locations by area
+    const locationsByArea = locations.reduce((acc, location) => {
+      const area = location.area || 'Other';
+      if (!acc[area]) acc[area] = [];
+      acc[area].push(location);
+      return acc;
+    }, {});
 
-      // Be nice to yr.no API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // Fetch weather for all locations, grouped by area
+    const weatherData = [];
+    for (const [area, areaLocations] of Object.entries(locationsByArea)) {
+      console.log(`\n📍 ${area}:`);
+      for (const location of areaLocations) {
+        console.log(`  Fetching weather for ${location.name}...`);
+        const weather = await fetchWeather(location.latitude, location.longitude);
+        weatherData.push({
+          area: location.area || 'Other',
+          location: location.name,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          temperature: weather.temperature,
+          precipitation: weather.precipitation,
+          cloudCover: weather.cloudCover
+        });
+        console.log(`    Temperature: ${weather.temperature}°C, Precipitation (6h): ${weather.precipitation}mm, Cloud cover: ${weather.cloudCover}% (timestamp: ${weather.timestamp})`);
+
+        // Be nice to yr.no API
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     if (dryRun) {
