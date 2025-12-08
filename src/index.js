@@ -76,7 +76,7 @@ async function appendToSheet(auth, locations, weatherData) {
   const hour = now.getUTCHours().toString().padStart(2, '0'); // HH
 
   // Check if headers exist, create if not
-  const headerRange = 'Sheet1!A1:G1';
+  const headerRange = 'Sheet1!A1:F1';
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange
@@ -89,7 +89,7 @@ async function appendToSheet(auth, locations, weatherData) {
       spreadsheetId,
       range: 'Sheet1!A1',
       valueInputOption: 'RAW',
-      resource: { values: [['Date', 'Hour', 'Area', 'Location', 'Temperature', 'Precipitation', 'CloudCover']] }
+      resource: { values: [['Date', 'Hour', 'Location', 'Temperature', 'Precipitation', 'CloudCover']] }
     });
   }
 
@@ -97,7 +97,6 @@ async function appendToSheet(auth, locations, weatherData) {
   const rows = weatherData.map(weather => [
     date,
     hour,
-    weather.area,
     weather.location,
     weather.temperature,
     weather.precipitation,
@@ -107,7 +106,7 @@ async function appendToSheet(auth, locations, weatherData) {
   // Append all rows at once
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:G',
+    range: 'Sheet1!A:F',
     valueInputOption: 'RAW',
     resource: { values: rows }
   });
